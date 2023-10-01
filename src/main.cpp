@@ -165,6 +165,7 @@ uint8_t       Cath::S_LastMilli=0;
 
 #define main_screen 0
 #define alti_graph 1
+#define sumary_screen 7
 #define settings_menu 2
 #define settings_sons_bluetooth 3
 #define settings_altitude 4
@@ -262,7 +263,11 @@ int g_current_sea_pressure_level = 102000;
 
 EspSoftwareSerial::UART myBlueSerial(rxBluePin, txBluePin);
 
-
+int g_total_fly_hour;
+int g_total_fly_min;
+int g_total_alti;
+float g_total_vario_max;
+float g_total_vario_min;
 
 
 //================================================================================================================
@@ -436,13 +441,6 @@ class Alti: public Cath{
         bmp.begin(BMP085_ULTRAHIGHRES);
         sa_prev_ms = millis();
 
-        
-        /*float tmp_alti[9];
-        for(int i = 0; i < 9 ; i ++){
-            tmp_alti[i] = bmp.readAltitude(g_current_sea_pressure_level);
-        }
-        std::sort(std::begin(tmp_alti), std::end(tmp_alti));
-        g_altitude = tmp_alti[4];*/
         float tmp_alti = 0;
         for(int i = 0; i < 9 ; i ++){
             tmp_alti += bmp.readAltitude(g_current_sea_pressure_level);
@@ -464,10 +462,23 @@ class Alti: public Cath{
         g_altitude = tmp_alti/9;
 
         //compute vario from altitude and milis
+        if(g_altitude > g_total_alti){
+            g_total_alti = g_altitude;
+            save_to_eeprom_alti();
+        }
         
 
         // gvarion = (delta alti) / (delta milis * 0.001)
         g_vario = (g_altitude-g_prev_altitude) / ((millis() - prev_alt_ms) * 0.001);
+
+        if(g_vario > g_total_vario_max){
+            g_total_vario_max = g_vario;
+            save_to_eeprom_var_max();
+        }
+        if(g_vario < -g_total_vario_min){
+            g_total_vario_min = -g_vario;
+            save_to_eeprom_var_min();
+        }
 
         set_g_vario_lim5();
         buzz_delay = mapfloat(g_vario,0,5,buzz_delay_max,buzz_delay_min);
@@ -496,11 +507,6 @@ class HistoVario: public Cath{
         for(int i = 4; i >= 0; i --){
             g_vario_history_5[i+1] = g_vario_history_5[i];
         }
-        //g_vario_history_5[5] = g_vario_history_5[4];
-        //g_vario_history_5[4] = g_vario_history_5[3];
-        //g_vario_history_5[3] = g_vario_history_5[2];
-        //g_vario_history_5[2] = g_vario_history_5[1];
-        //g_vario_history_5[1] = g_vario_history_5[0];
         g_vario_history_5[0] = g_vario_lim5;
     }
 };
@@ -538,6 +544,7 @@ class HistoAlti: public Cath{
     }
 };
 //..........................................................................................
+//===== button interrupt section
 class Buttons: public Cath{
 
     public:
@@ -583,10 +590,13 @@ class Buttons: public Cath{
                     break;
                     break;
                 case main_screen:
-                    current_menu = alti_graph;
+                    current_menu = sumary_screen;
                     break;
                 case alti_graph:
                     current_menu = main_screen;
+                    break;
+                case sumary_screen:
+                    current_menu = alti_graph;
                     break;
                 case settings_auto_defil:
                     if(sub_menu_selected == 0){
@@ -605,6 +615,7 @@ class Buttons: public Cath{
             switch(current_menu){
                 case main_screen:
                 case alti_graph:
+                case sumary_screen:
                     current_menu = 2;
                     break;
                 case settings_menu:
@@ -702,11 +713,14 @@ class Buttons: public Cath{
                         tmp_dates[4] = tmp_dates[1] % 60;
                     }
                     break;
+                case sumary_screen:
+                    current_menu = main_screen;
+                    break;
                 case main_screen:
                     current_menu = alti_graph;
                     break;
                 case alti_graph:
-                    current_menu = main_screen;
+                    current_menu = sumary_screen;
                     break;
                 case settings_auto_defil:
                     if(sub_menu_selected == 0){
@@ -870,13 +884,35 @@ class Bluetooth: public Cath{
     }
 };
 
+//..........................................................................................
+class TotalTime: public Cath{
+
+    public:
+
+    TotalTime(unsigned long Period,unsigned long Offset=1){
+        Cath::S_Register(this,Period,Offset);
+    }
+
+    void SetUp(){
+    }
+
+    void Loop(){
+        g_total_fly_min += 10;
+        if(g_total_fly_min > 60){
+            g_total_fly_hour += 1;
+            g_total_fly_min -= 60;
+        }
+        save_to_eeprom_flytime();
+    }
+};
+
 
 // ****************************************************************************************************************
 // Global tasks instanciation
 
 Buzz            MainBuzz(buzz_delay,50);
 Gui             gui(200,100);
-Alti            AV(200,5);
+Alti            AV(600,5);
 //AltiSimu        AS(200,5);
 HistoVario      HV(5000,150);
 Buttons         Bt(190,200);
@@ -886,6 +922,7 @@ Autodefil       AF(3000,3000);
 HistoAlti       HA(5000,25);
 Battery         BT(5000,300);
 Bluetooth       blu(1000,400);
+TotalTime       tt(600000,600000);//10 mins
 //DebugPrint dp(500,150);
 
 

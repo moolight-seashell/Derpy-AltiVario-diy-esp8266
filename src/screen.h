@@ -38,6 +38,12 @@ extern int g_altitude_history[100];
 extern int g_altitude_hmax;
 extern int g_altitude_hmin;
 
+extern int g_total_fly_hour;
+extern int g_total_fly_min;
+extern int g_total_alti;
+extern float g_total_vario_max;
+extern float g_total_vario_min;
+
 void draw_main_screen();
 
 void draw_start_screen();
@@ -47,6 +53,8 @@ void draw_header_0();
 void draw_screen_0();
 
 void draw_screen_1();
+
+void draw_screen_2();
 
 void draw_header_settings();
 

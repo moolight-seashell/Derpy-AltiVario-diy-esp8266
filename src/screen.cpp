@@ -2,6 +2,7 @@
 
 #define main_screen 0
 #define alti_graph 1
+#define sumary_screen 7
 #define settings_menu 2
 #define settings_sons 3
 #define settings_altitude 4
@@ -105,6 +106,8 @@ const unsigned char derpy_mlp [] = {
 
 void draw_main_screen(){
     u8g2.clearBuffer();
+
+
     switch(current_menu){
         case main_screen:
             draw_header_0();
@@ -113,6 +116,10 @@ void draw_main_screen(){
         case alti_graph:
             draw_header_0();
             draw_screen_1();
+            break;
+        case sumary_screen:
+            draw_header_0();
+            draw_screen_2();
             break;
         case settings_menu:
             draw_header_settings();
@@ -274,6 +281,28 @@ void draw_screen_1(){
     }
 }
 
+void draw_screen_2(){
+    u8g2.setFont(u8g_font_courR08);
+    u8g2.drawStr( 0, 20, "summary");
+    u8g2.drawStr( 0, 30, "total fly :");
+    u8g2.drawStr( 0, 40, "alti max  :");
+    u8g2.drawStr( 0, 50, "vario max :");
+    u8g2.drawStr( 0, 60, "vario min :");
+
+    char tmp [20];
+    sprintf(tmp, "%d", g_total_fly_min );
+    sprintf(tmp, "%5d.%c h", g_total_fly_hour, tmp[0] );
+    u8g2.drawStr(70,30, tmp);
+
+    sprintf(tmp, "%6d m", g_total_alti );
+    u8g2.drawStr(70,40, tmp);
+    
+    sprintf(tmp, "+%2.1f m/s", g_total_vario_max );
+    u8g2.drawStr(70,50, tmp);
+
+    sprintf(tmp, "-%2.1f m/s", g_total_vario_min );
+    u8g2.drawStr(70,60, tmp);
+}
 
 void draw_header_settings(){
     u8g2.drawHLine(0,12,128);
