@@ -903,10 +903,6 @@ class TotalTime: public Cath{
     }
 
     void Loop(){
-        Serial.print("curr : ");
-        Serial.print(int(g_minute));
-        Serial.print(" last : ");
-        Serial.println(int(g_last_minute));
 
         if(g_last_minute > g_minute){
             if(( g_minute + 60 ) - g_last_minute >= 10){
