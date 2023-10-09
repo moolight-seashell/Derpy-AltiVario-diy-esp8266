@@ -2,6 +2,7 @@
 
 ![Alt text](/images/1.webp)
 ![Alt text](/images/2.webp)
+![Alt text](/images/2bis.webp)
 ![Alt text](/images/3.webp)
 ![Alt text](/images/4.webp)
 ![Alt text](/images/5.webp)
@@ -15,6 +16,10 @@ after doing this i highly recoment to use a multi core micro controller with a s
 I d'ont recomend to fully copy paste this project
 
 the actual esp8266 cannot have at the same time rtos and support for arduino framowork. Maybe the esp32 is a better choice to do the job
+
+this is thy this project is build with "cath" (next later)
+
+because of the pinout , buttons cannot be manage by an proper cpu interruption so the buttons are manage with pulling. This is why button can looks laggy
 
 ## Generals
 

@@ -60,7 +60,7 @@ Version Date        Author    Comment
 // Start of Cath definition__________________________________________________________________________________
 #define kMaxCathTask    12         // Max Number of task instances. MUST BE >= to tasks instancied
 
-#define __CathOpt_SmallCounter__  // Comment this line to allow 32 bit delay. If not, max period is 65536 ms
+//#define __CathOpt_SmallCounter__  // Comment this line to allow 32 bit delay. If not, max period is 65536 ms
 
 #ifdef __CathOpt_SmallCounter__
 typedef uint16_t CathCnt;
@@ -265,6 +265,7 @@ EspSoftwareSerial::UART myBlueSerial(rxBluePin, txBluePin);
 
 int g_total_fly_hour;
 int g_total_fly_min;
+byte g_last_minute;
 int g_total_alti;
 float g_total_vario_max;
 float g_total_vario_min;
@@ -741,41 +742,38 @@ class Buttons: public Cath{
 //..........................................................................................
 class Clock: public Cath{
 
-  public:
+public:
+    Clock(unsigned long Period,unsigned long Offset=1){
+        Cath::S_Register(this,Period,Offset);
+    }
 
-  Clock(unsigned long Period,unsigned long Offset=1){
-    Cath::S_Register(this,Period,Offset);
-  }
+    void SetUp(){
+        get_time();
+        g_last_minute = g_minute;
+    }
 
-  void SetUp(){
-  }
-
-  void Loop(){
-      get_time();
-  }
-
+    void Loop(){
+        get_time();
+    }
 };
 
 
 //..........................................................................................
 class TempHum: public Cath{
 
-  public:
+public:
+    TempHum(unsigned long Period,unsigned long Offset=1){
+        Cath::S_Register(this,Period,Offset);
+    }
 
-  TempHum(unsigned long Period,unsigned long Offset=1){
-    Cath::S_Register(this,Period,Offset);
-  }
+    void SetUp(){
+        dht.begin();
+    }
 
-  void SetUp(){
-    
-    dht.begin();
-  }
-
-  void Loop(){
-      g_temperature = int(dht.readTemperature());
-      g_humidity = int(dht.readHumidity());
-  }
-
+    void Loop(){
+        g_temperature = int(dht.readTemperature());
+        g_humidity = int(dht.readHumidity());
+    }
 };
 
 //..........................................................................................
@@ -838,8 +836,6 @@ class Battery: public Cath{
         int reading = analogRead(A0);
         float tmp_batt = mapfloat(reading,0,1024,0,5) - 0.1;
         g_batt = int(mapfloat(tmp_batt,3.8,5,0,100));
-        Serial.print("read : ");
-        Serial.println(g_batt);
     }
 
 };
@@ -896,13 +892,31 @@ class TotalTime: public Cath{
     void SetUp(){
     }
 
-    void Loop(){
-        g_total_fly_min += 10;
+    void Add(int delay){
+        g_total_fly_min += delay;
+        g_last_minute = g_minute;
         if(g_total_fly_min > 60){
             g_total_fly_hour += 1;
             g_total_fly_min -= 60;
         }
         save_to_eeprom_flytime();
+    }
+
+    void Loop(){
+        Serial.print("curr : ");
+        Serial.print(int(g_minute));
+        Serial.print(" last : ");
+        Serial.println(int(g_last_minute));
+
+        if(g_last_minute > g_minute){
+            if(( g_minute + 60 ) - g_last_minute >= 10){
+                Add(( g_minute + 60 ) - g_last_minute);
+            }
+        } else {
+            if(g_minute  - g_last_minute >= 10){
+                Add(g_minute  - g_last_minute);
+            }
+        }
     }
 };
 
@@ -922,7 +936,7 @@ Autodefil       AF(3000,3000);
 HistoAlti       HA(5000,25);
 Battery         BT(5000,300);
 Bluetooth       blu(1000,400);
-TotalTime       tt(600000,600000);//10 mins
+TotalTime       tt(30000,30000);//very inacurate 30s (1min)
 //DebugPrint dp(500,150);
 
 
