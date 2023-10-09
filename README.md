@@ -17,7 +17,7 @@ I d'ont recomend to fully copy paste this project
 
 the actual esp8266 cannot have at the same time rtos and support for arduino framowork. Maybe the esp32 is a better choice to do the job
 
-this is thy this project is build with "cath" (next later)
+this is why this project is build with the library "cath" (next later)
 
 because of the pinout , buttons cannot be manage by an proper cpu interruption so the buttons are manage with pulling. This is why button can looks laggy
 
