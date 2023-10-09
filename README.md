@@ -38,10 +38,10 @@ features :
 - display datas with an monochromatic oled screen (sh1106)
 - realistic sound (passive buzzer wired up with a transistor , 1k resistor and a diode )
 like so https://electronics.stackexchange.com/questions/148335/switching-piezo-buzzer-with-a-transistor
-- two screen , the main and a short history of altitude
+- tree main screen , the main, a short graph / history of altitude, a summary sreen with total value like the total fly time using this vario
 - settings and menu
-- dirty battery monitor (d'ont take care about battery discharge curve)
-- works with 4 AAA rechargable battery only
+- battery monitor (but not the cleanest, i d'ont take care about battery discharge curve)
+- works with 4 AAA RECHARGABLE BATTERY ONLY
 
 note : HC-06 and buzzer are powered directly on the battery + to have close to 4.8v the others are powered with th 3v output pin of esp8266
 
